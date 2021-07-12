@@ -1,0 +1,133 @@
+---
+title: ""
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(here)
+library(readxl)
+library(janitor)
+```
+
+```{r}
+here::here()
+```
+```{r}
+#Viewing all excel sheet names
+excel_sheets(here("raw_data/seabirds.xls"))
+```
+
+```{r}
+# Loading in two useful sheets
+bird_data_by_record_id <- read_excel(here("raw_data/seabirds.xls"), 2)
+ship_data_by_record_id <- read_excel(here("raw_data/seabirds.xls"), 1) 
+ship_data_codes <- read_excel(here("raw_data/seabirds.xls"), 3)
+bird_data_codes <- read_excel(here("raw_data/seabirds.xls"), 4)
+```
+
+```{r}
+# Clean column names
+bird_data_by_record_id <- clean_names(bird_data_by_record_id)
+ship_data_by_record_id <- clean_names(ship_data_by_record_id)
+```
+
+
+```{r}
+# Selecting the columns required to answer the analysis questions
+bird_data_by_record_id_clean <- bird_data_by_record_id %>% 
+  select(record:species_abbreviation, count)
+ship_data_by_record_id_clean <- ship_data_by_record_id %>% 
+  select(record_id:long)
+```
+
+```{r}
+# Joining the two tables 
+bird_ship_data_joined <- bird_data_by_record_id_clean %>% 
+  left_join(ship_data_by_record_id_clean, by = "record_id")
+```
+
+```{r}
+colSums(is.na(bird_ship_data_joined))
+```
+
+```{r}
+# Remove all NAs in 'count' as without a number here voids the sighting
+bird_ship_data_joined <- bird_ship_data_joined %>% 
+  na.omit(count)
+```
+
+```{r}
+# 1. Which bird had the most individual sightings?
+
+bird_ship_data_joined %>% 
+  filter(count == 1) %>% 
+  group_by(species_common_name_taxon_age_sex_plumage_phase) %>% 
+  summarise(species_common_name_taxon_age_sex_plumage_phase, species_scientific_name_taxon_age_sex_plumage_phase, species_abbreviation, count = sum(count)) %>% 
+  ungroup() %>% 
+  slice_max(count, n = 1, with_ties = FALSE) %>% 
+  pull(species_common_name_taxon_age_sex_plumage_phase)
+  
+```
+
+```{r}
+# Checking my workings 
+bird_ship_data_joined %>% 
+  filter(species_abbreviation == "DIOANTEXU PL3") %>% 
+  filter(count == 1)
+# The tibble is 1707 rows and therefore, matches the number I get above
+```
+
+
+```{r}
+# 2. Which bird had the highest total count?
+
+bird_ship_data_joined %>% 
+  group_by(species_common_name_taxon_age_sex_plumage_phase) %>% 
+  summarise(count = sum(count)) %>% 
+  slice_max(count, n = 1) %>% 
+  pull(species_common_name_taxon_age_sex_plumage_phase)
+```
+
+```{r}
+# 3. Which bird had the highest total count above a latitude of -30?
+bird_ship_data_joined %>% 
+  filter(lat > -30) %>% 
+  group_by(species_common_name_taxon_age_sex_plumage_phase) %>% 
+  summarise(lat, count = sum(count)) %>% 
+  ungroup() %>% 
+  slice_max(count, n = 1) #%>% 
+  pull(species_common_name_taxon_age_sex_plumage_phase) 
+
+```
+
+```{r}
+# Checking working 
+bird_ship_data_joined %>% 
+  filter(species_common_name_taxon_age_sex_plumage_phase == "Wedge-tailed shearwater") %>% 
+  filter(lat > -30) %>% 
+  summarise(sum(count))
+  
+```
+
+
+```{r}
+# 4. How many different types of birds were only ever seen in groups of 1?
+bird_ship_data_joined %>% 
+  #filter(count == 1) %>% 
+  group_by(species_common_name_taxon_age_sex_plumage_phase) %>% 
+  summarise(count = sum(count)/count) #%>% 
+  #distinct()
+
+```
+
+```{r}
+# 5. How many penguins were seen? (Hint: there are many types of penguin)
+
+bird_ship_data_joined %>% 
+  filter(str_detect(species_common_name_taxon_age_sex_plumage_phase, "penguin")) %>% 
+  distinct(species_common_name_taxon_age_sex_plumage_phase) %>% 
+  summarise(nrow(species_common_name_taxon_age_sex_plumage_phase)) 
+
+```
+
