@@ -83,26 +83,38 @@ boing_boing_candy_2015 <- boing_boing_candy_2015 %>%
 ```{r}
 # pivoting 2015 table
 boing_boing_candy_2015 <- boing_boing_candy_2015 %>% 
-  pivot_longer(4:96, names_to = "candy name", values_to = "review")
+  pivot_longer(4:96, names_to = "candy_name", values_to = "review")
 ```
 
 ```{r}
 # sorting columns into an order to match other dfs pre-join
 boing_boing_candy_2015 <- boing_boing_candy_2015 %>% 
   select(#"id", 
-         "going_trick_or_treating", "gender", "age", "country", "state", "candy name", "review")
+         "going_trick_or_treating", "gender", "age", "country", "state", "candy_name", "review")
 ```
 
 ```{r}
 # pivoting 2016 table
 boing_boing_candy_2016 <- boing_boing_candy_2016 %>% 
-  pivot_longer(6:105, names_to = "candy name", values_to = "review")
+  pivot_longer(6:105, names_to = "candy_name", values_to = "review")
 ```
 
 ```{r}
 #pivoting 2017 table
 boing_boing_candy_2017 <- boing_boing_candy_2017 %>% 
-  pivot_longer(6:108, names_to = "candy name", values_to = "review")
+  pivot_longer(6:108, names_to = "candy_name", values_to = "review")
+```
+
+```{r}
+# Removing square brackets from 'candy name' column in 2015 and 2016
+boing_boing_candy_2015 <- boing_boing_candy_2015 %>% 
+  mutate(candy_name = str_sub(candy_name, 2, -2))
+
+boing_boing_candy_2016 <- boing_boing_candy_2016 %>% 
+  mutate(candy_name = str_sub(candy_name, 2, -2))
+
+boing_boing_candy_2017 <- boing_boing_candy_2017 %>% 
+  mutate(candy_name = str_sub(candy_name, start = 6,))
 ```
 
 ```{r}
@@ -112,15 +124,15 @@ boing_boing_candy_2015_to_2017 <- rbind(boing_boing_candy_2015, boing_boing_cand
 ```
 
 ```{r}
+#  Converting 'age' to an integer column
 boing_boing_candy_2015_to_2017 <- boing_boing_candy_2015_to_2017 %>% 
   mutate(age = as.integer(age))
 ```
 
 ```{r}
-# Checking ages are an appropriate range 
-boing_boing_candy_2015_to_2017 %>% 
-  filter(age > 122) %>% 
-  mutate(age = NA_integer_) 
+# Turning false ages into NAs 
+#boing_boing_candy_2015_to_2017 %>% 
+#  filter(age < 122 | is.na(age))
 ```
 
 
@@ -163,28 +175,28 @@ boing_boing_candy_2015_to_2017_clean <- boing_boing_candy_2015_to_2017 %>%
 
 ```{r}
 #extra
-              str_detect(country, "Brasil") ~ "Brazil",
-              str_detect(country, "[Nn]etherlands") ~ "The Netherlands",
-              str_detect(country, "EUA|UAE") ~ "United Arab Emirates",
- str_detect(country, "\\w+\\s\\w+\\s\\w") ~ "NA",
-              str_detect(country, "this one") ~ "NA",
-              str_detect(country, "god's country") ~ "NA",
-              str_detect(country, "Somewhere") ~ "NA",
-              str_detect(country, "españa") ~ "NA",
-              str_detect(country, "Neverland") ~ "NA",
-              str_detect(country, "See above") ~ "NA", #could look for this
-              str_detect(country, "Denial") ~ "NA",
-              str_detect(country, "Europe") ~ "NA",
-              str_detect(country, "Earth") ~ "NA",
-              str_detect(country, "insanity lately") ~ "NA",
-              str_detect(country, "A") ~ "NA",
-              str_detect(country, "Can") ~ "NA",
-              str_detect(country, "UD") ~ "NA",
-              str_detect(country, "Narnia") ~ "NA",
-              str_detect(country, "Not the USA or Canada") ~ "NA", 
-              str_detect(country, "\\d") ~ "NA",
-              str_detect(country, "N. America") ~ "NA",
-              str_detect(country, " *Ame") ~ "NA",
+#              str_detect(country, "Brasil") ~ "Brazil",
+#              str_detect(country, "[Nn]etherlands") ~ "The Netherlands",
+#              str_detect(country, "EUA|UAE") ~ "United Arab Emirates",
+# str_detect(country, "\\w+\\s\\w+\\s\\w") ~ "NA",
+#              str_detect(country, "this one") ~ "NA",
+#              str_detect(country, "god's country") ~ "NA",
+#              str_detect(country, "Somewhere") ~ "NA",
+#              str_detect(country, "españa") ~ "NA",
+#              str_detect(country, "Neverland") ~ "NA",
+#              str_detect(country, "See above") ~ "NA", #could look for this
+#              str_detect(country, "Denial") ~ "NA",
+#              str_detect(country, "Europe") ~ "NA",
+#              str_detect(country, "Earth") ~ "NA",
+#              str_detect(country, "insanity lately") ~ "NA",
+#              str_detect(country, "A") ~ "NA",
+#              str_detect(country, "Can") ~ "NA",
+#              str_detect(country, "UD") ~ "NA",
+#              str_detect(country, "Narnia") ~ "NA",
+#              str_detect(country, "Not the USA or Canada") ~ "NA", 
+#              str_detect(country, "\\d") ~ "NA",
+#              str_detect(country, "N. America") ~ "NA",
+#              str_detect(country, " *Ame") ~ "NA",
 
 ```
 
@@ -200,9 +212,30 @@ boing_boing_candy_2015_to_2017_clean %>%
 
 boing_boing_candy_2015_to_2017_clean %>% 
     group_by(going_trick_or_treating) %>% 
-    summarise(average_age = mean(age, nm.rm = TRUE))
+    filter(age < 122) %>%  # Oldest ever person was 122 
+    summarise(average_age = round(mean(age, nm.rm = TRUE)))
+
 ```
 
+```{r}
+# 3. For each of joy, despair and meh, which candy bar revived the most of these ratings?
 
+boing_boing_candy_2015_to_2017_clean %>% 
+  group_by(candy_name) %>%
+  filter(str_detect(review, "JOY")) %>% 
+  summarise(how_many_reviews = length(review))
 
+```
+
+```{r}
+# 4. How many people rated Starburst as despair?
+
+boing_boing_candy_2015_to_2017_clean %>% 
+  group_by(review) %>%
+  filter(str_detect(candy_name, "Starburst")) %>% 
+  filter(str_detect(review, "DESPAIR")) %>% 
+  summarise(how_many_rated_starburst = length(candy_name)) %>% 
+  pull()
+  
+```
 
