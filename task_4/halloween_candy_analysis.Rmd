@@ -1,0 +1,208 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(here)
+library(readxl)
+```
+
+```{r}
+here::here
+```
+
+
+```{r}
+boing_boing_candy_2015 <- read_excel(here("raw_data/candy_ranking_data/boing-boing-candy-2015.xlsx"))
+boing_boing_candy_2016 <- read_excel(here("raw_data/candy_ranking_data/boing-boing-candy-2016.xlsx"))
+boing_boing_candy_2017 <- read_excel(here("raw_data/candy_ranking_data/boing-boing-candy-2017.xlsx"))
+```
+
+```{r}
+boing_boing_candy_2015 <- boing_boing_candy_2015 %>% 
+  select(2:96, 115)
+```
+
+```{r}
+boing_boing_candy_2016 <- boing_boing_candy_2016 %>% 
+  select(2:106)
+```
+
+```{r}
+boing_boing_candy_2017 <- boing_boing_candy_2017 %>% 
+  select(2:109)
+```
+
+# Go back and look at 'other joy / despair' text box and how could incorporate
+
+```{r}
+# renaming columns 
+
+boing_boing_candy_2015 <- boing_boing_candy_2015 %>% 
+  rename(
+    age = "How old are you?",
+    going_trick_or_treating = "Are you going actually going trick or treating yourself?") 
+
+boing_boing_candy_2016 <- boing_boing_candy_2016 %>% 
+  rename(
+    going_trick_or_treating = "Are you going actually going trick or treating yourself?",
+    gender = "Your gender:",
+    age = "How old are you?",
+    country = "Which country do you live in?",
+    state = "Which state, province, county do you live in?"
+  )
+  
+boing_boing_candy_2017 <- boing_boing_candy_2017 %>% 
+  rename(
+    going_trick_or_treating = "Q1: GOING OUT?",
+    gender = "Q2: GENDER",
+    age = "Q3: AGE",
+    country = "Q4: COUNTRY",
+    state = "Q5: STATE, PROVINCE, COUNTY, ETC"
+  )
+
+```
+
+```{r}
+# Adding missing gender, country and state columns and filling with NAs
+boing_boing_candy_2015 <- boing_boing_candy_2015 %>% 
+  add_column(gender = NA,
+             country = NA,
+             state = NA)
+```
+
+```{r}
+#boing_boing_candy_2015 <- tibble::rowid_to_column(boing_boing_candy_2015, "id")
+#boing_boing_candy_2016 <- tibble::rowid_to_column(boing_boing_candy_2016, "id")
+#boing_boing_candy_2017 <- tibble::rowid_to_column(boing_boing_candy_2017, "id")
+```
+
+```{r}
+# pivoting 2015 table
+boing_boing_candy_2015 <- boing_boing_candy_2015 %>% 
+  pivot_longer(4:96, names_to = "candy name", values_to = "review")
+```
+
+```{r}
+# sorting columns into an order to match other dfs pre-join
+boing_boing_candy_2015 <- boing_boing_candy_2015 %>% 
+  select(#"id", 
+         "going_trick_or_treating", "gender", "age", "country", "state", "candy name", "review")
+```
+
+```{r}
+# pivoting 2016 table
+boing_boing_candy_2016 <- boing_boing_candy_2016 %>% 
+  pivot_longer(6:105, names_to = "candy name", values_to = "review")
+```
+
+```{r}
+#pivoting 2017 table
+boing_boing_candy_2017 <- boing_boing_candy_2017 %>% 
+  pivot_longer(6:108, names_to = "candy name", values_to = "review")
+```
+
+```{r}
+
+boing_boing_candy_2015_to_2017 <- rbind(boing_boing_candy_2015, boing_boing_candy_2016, boing_boing_candy_2017)
+
+```
+
+```{r}
+boing_boing_candy_2015_to_2017 <- boing_boing_candy_2015_to_2017 %>% 
+  mutate(age = as.integer(age))
+```
+
+```{r}
+# Checking ages are an appropriate range 
+boing_boing_candy_2015_to_2017 %>% 
+  filter(age > 122) %>% 
+  mutate(age = NA_integer_) 
+```
+
+
+```{r}
+# Pulled a distinct list of countries inputs and used regexr.com to figure out appropriate regex to clean up
+boing_boing_candy_2015_to_2017 %>% 
+  distinct(country) %>% 
+  pull()
+```
+
+```{r}
+#boing_boing_candy_2015_to_2017 <- boing_boing_candy_2015_to_2017 %>% 
+ # mutate(country = str_to_title(country))
+```
+
+```{r}
+# cleaning the country column 
+boing_boing_candy_2015_to_2017_clean <- boing_boing_candy_2015_to_2017 %>%
+          mutate(
+            country = case_when(
+              str_detect(country, "North Carolina") ~ "United States of America",
+              str_detect(country, "California") ~ "United States of America",
+              str_detect(country, "Pittsburgh") ~ "United States of America",
+              str_detect(country, "New York") ~ "United States of America",
+              str_detect(country, "New Jersey") ~ "United States of America",
+              str_detect(country, "\\s+[S|s]t*[a|e|s]") ~ "United States of America",
+              str_detect(country, "[U|u][. ]*[S|s] *[A|a]*") ~ "United States of America",
+              str_detect(country, "The Yoo Ess of Aaayyyyyy") ~ "United States of America",
+              str_detect(country, "[Cc]ascadia") ~ "United States of America",
+              str_detect(country, "[Mm][u|e]r+i[c|k]a") ~ "United States of America",
+              str_detect(country, "Trumpistan") ~ "United States of America",
+              str_detect(country, "soviet canuckistan") ~ "Canada",
+              str_detect(country, "[U|u]\\.?[K|k]") ~ "United Kingdom",
+              str_detect(country, "[UnitedKindom]{6}") ~ "United Kingdom",
+              str_detect(country, "[g|t|d]land") ~ "United Kingdom",
+              TRUE ~ NA_character_
+  )
+) 
+```
+
+```{r}
+#extra
+              str_detect(country, "Brasil") ~ "Brazil",
+              str_detect(country, "[Nn]etherlands") ~ "The Netherlands",
+              str_detect(country, "EUA|UAE") ~ "United Arab Emirates",
+ str_detect(country, "\\w+\\s\\w+\\s\\w") ~ "NA",
+              str_detect(country, "this one") ~ "NA",
+              str_detect(country, "god's country") ~ "NA",
+              str_detect(country, "Somewhere") ~ "NA",
+              str_detect(country, "españa") ~ "NA",
+              str_detect(country, "Neverland") ~ "NA",
+              str_detect(country, "See above") ~ "NA", #could look for this
+              str_detect(country, "Denial") ~ "NA",
+              str_detect(country, "Europe") ~ "NA",
+              str_detect(country, "Earth") ~ "NA",
+              str_detect(country, "insanity lately") ~ "NA",
+              str_detect(country, "A") ~ "NA",
+              str_detect(country, "Can") ~ "NA",
+              str_detect(country, "UD") ~ "NA",
+              str_detect(country, "Narnia") ~ "NA",
+              str_detect(country, "Not the USA or Canada") ~ "NA", 
+              str_detect(country, "\\d") ~ "NA",
+              str_detect(country, "N. America") ~ "NA",
+              str_detect(country, " *Ame") ~ "NA",
+
+```
+
+```{r}
+# 1. What is the total number of candy ratings given across the three years. (number of candy ratings, not number of raters. Don’t count missing values)
+
+boing_boing_candy_2015_to_2017_clean %>% 
+  summarise(total_no_of_candy_ratings = length(review[!is.na(review)]))
+```
+
+```{r}
+# 2. What was the average age of people who are going out trick or treating and the average age of people 3. not going trick or treating?
+
+boing_boing_candy_2015_to_2017_clean %>% 
+    group_by(going_trick_or_treating) %>% 
+    summarise(average_age = mean(age, nm.rm = TRUE))
+```
+
+
+
+
