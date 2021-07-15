@@ -106,6 +106,18 @@ boing_boing_candy_2017 <- boing_boing_candy_2017 %>%
 ```
 
 ```{r}
+# Adding year columns to answer question 7 
+boing_boing_candy_2015 <- boing_boing_candy_2015 %>% 
+  add_column(year = 2015, .before = 1)
+
+boing_boing_candy_2016 <- boing_boing_candy_2016 %>% 
+  add_column(year = 2016, .before = 1)
+
+boing_boing_candy_2017 <- boing_boing_candy_2017 %>% 
+  add_column(year = 2017, .before = 1)
+```
+
+```{r}
 # Removing square brackets from 'candy name' column in 2015 and 2016
 boing_boing_candy_2015 <- boing_boing_candy_2015 %>% 
   mutate(candy_name = str_sub(candy_name, 2, -2))
@@ -141,11 +153,6 @@ boing_boing_candy_2015_to_2017 <- boing_boing_candy_2015_to_2017 %>%
 boing_boing_candy_2015_to_2017 %>% 
   distinct(country) %>% 
   pull()
-```
-
-```{r}
-#boing_boing_candy_2015_to_2017 <- boing_boing_candy_2015_to_2017 %>% 
- # mutate(country = str_to_title(country))
 ```
 
 ```{r}
@@ -201,6 +208,70 @@ boing_boing_candy_2015_to_2017_clean <- boing_boing_candy_2015_to_2017 %>%
 ```
 
 ```{r}
+# Taking out non-candies 
+boing_boing_candy_2015_to_2017_clean <- 
+  boing_boing_candy_2015_to_2017_clean %>%
+          mutate(
+            candy_name = case_when(
+              str_detect(candy_name, "M&M") ~ "M&M's",
+              str_detect(candy_name, "Anon") ~ "Mary Janes",
+              str_detect(candy_name, "[Gg]ummy Bears") ~ "Gummy Bears",
+              str_detect(candy_name, "Jolly Rancher") ~ "Jolly Rancher",
+              str_detect(candy_name, "[Ll]icorice") ~ "Licorice",
+              str_detect(candy_name, "baseball") ~ "Gum",
+              str_detect(candy_name, "Tolberone") ~ "Tolberone",
+              str_detect(candy_name, "Chick-o-Sticks") ~ "Chick-o-Sticks",
+              str_detect(candy_name, "[Cc]ircus") ~ "Circus Peanuts",
+              str_detect(candy_name, "[Pp]eanut [Bb]utter [B|J]") ~ "Peanut Butter Bars",
+              str_detect(candy_name, "Sourpatch") ~ "Sourpatch Kids",
+              str_detect(candy_name, "Sweetums") ~ "Sweetums",
+              str_detect(candy_name, "Dark Chocolate") ~ "Hershey's Dark Chocolate",
+              str_detect(candy_name, "vein") ~ "NA",
+              str_detect(candy_name, "restaurant") ~ "NA",
+              str_detect(candy_name, "vein") ~ "NA",
+              str_detect(candy_name, "[Cc]ash") ~ "NA",
+              str_detect(candy_name, "vein") ~ "NA",
+              str_detect(candy_name, "[Dd]ental") ~ "NA",
+              str_detect(candy_name, "Acetam") ~ "NA",
+              str_detect(candy_name, "[Gg]low *stick") ~ "NA",
+              str_detect(candy_name, "[Gg]low *stick") ~ "NA",
+              str_detect(candy_name, "[Cc]omics") ~ "NA",
+              str_detect(candy_name, "[Ff]ruit") ~ "NA",
+              str_detect(candy_name, "[Hh]ugs") ~ "NA",
+              str_detect(candy_name, "[Kk]ale") ~ "NA",
+              str_detect(candy_name, "[Ll]apel|[Pp]in") ~ "NA",
+              str_detect(candy_name, "[Ll]apel|[Pp]in") ~ "NA",
+              str_detect(candy_name, "[Ll]apel|[Pp]in") ~ "NA",
+              str_detect(candy_name, "[Cc]hips") ~ "NA",
+              str_detect(candy_name, "[Ll]apel|[Pp]in") ~ "NA",
+              str_detect(candy_name, "Iodine") ~ "NA",
+              str_detect(candy_name, "[Ss]potted [Dd]ick") ~ "NA",
+              str_detect(candy_name, "[Tt]rail Mix") ~ "NA",
+              str_detect(candy_name, "[Vv]icodin") ~ "NA",
+              str_detect(candy_name, "[Vv]icodin") ~ "NA",
+              str_detect(candy_name, "[Bb]read") ~ "NA",
+              str_detect(candy_name, "[Ww]heat") ~ "NA",
+              str_detect(candy_name, "[Bb]read") ~ "NA",
+              str_detect(candy_name, "game") ~ "NA",
+              str_detect(candy_name, "[Bb]onkers") ~ "Bonkers",
+              str_detect(candy_name, "[Rr]aisins") ~ "Raisins",
+              str_detect(candy_name, "[Cc]hardonnay") ~ "NA",
+              str_detect(candy_name, "[Ss]eason") ~ "NA",
+              str_detect(candy_name, "Whatchamacallit Bars") ~ "NA",
+              str_detect(candy_name, "[Ss]andwich") ~ "NA",
+              TRUE ~ candy_name
+            )
+          ) %>% mutate(candy_name = na_if(candy_name, "NA")) 
+```
+
+```{r}
+boing_boing_candy_2015_to_2017_clean %>% 
+  mutate(candy_name = na_if(candy_name, "NA")) %>% 
+  distinct(candy_name)
+```
+
+
+```{r}
 # 1. What is the total number of candy ratings given across the three years. (number of candy ratings, not number of raters. Don’t count missing values)
 
 boing_boing_candy_2015_to_2017_clean %>% 
@@ -208,19 +279,33 @@ boing_boing_candy_2015_to_2017_clean %>%
 ```
 
 ```{r}
-# 2. What was the average age of people who are going out trick or treating and the average age of people 3. not going trick or treating?
+# 2. What was the average age of people who are going out trick or treating 
 
 boing_boing_candy_2015_to_2017_clean %>% 
     group_by(going_trick_or_treating) %>% 
     filter(age < 122) %>%  # Oldest ever person was 122 
-    summarise(average_age = round(mean(age, nm.rm = TRUE)))
+    summarise(average_age = round(mean(age, nm.rm = TRUE))) %>% 
+    filter(going_trick_or_treating == "Yes") %>% 
+    pull(average_age)
 
 ```
 
 ```{r}
-# 3. For each of joy, despair and meh, which candy bar revived the most of these ratings?
+# 3. What was the average age of people not going trick or treating?
+  
+boing_boing_candy_2015_to_2017_clean %>% 
+    group_by(going_trick_or_treating) %>% 
+    filter(age < 122) %>%  # Oldest ever person was 122 
+    summarise(average_age = round(mean(age, nm.rm = TRUE))) %>% 
+    filter(going_trick_or_treating == "No") %>% 
+    pull(average_age)
 
-#3.1
+```
+
+```{r}
+# 4. For each of joy, despair and meh, which candy bar revived the most of these ratings?
+
+#4.1
 # Most Ratings for Joy
 boing_boing_candy_2015_to_2017_clean %>% 
   group_by(candy_name) %>%
@@ -231,7 +316,7 @@ boing_boing_candy_2015_to_2017_clean %>%
 
 
 ```{r}
-#3.2
+#4.2
 # Most Ratings for Despair
 boing_boing_candy_2015_to_2017_clean %>% 
   group_by(candy_name) %>%
@@ -241,7 +326,7 @@ boing_boing_candy_2015_to_2017_clean %>%
 ```
 
 ```{r}
-#3.3
+#4.3
 # Most Ratings for Meh
 boing_boing_candy_2015_to_2017_clean %>% 
   group_by(candy_name) %>%
@@ -252,7 +337,7 @@ boing_boing_candy_2015_to_2017_clean %>%
 
 
 ```{r}
-# 4. How many people rated Starburst as despair?
+# 5. How many people rated Starburst as despair?
 
 boing_boing_candy_2015_to_2017_clean %>% 
   group_by(review) %>%
@@ -266,36 +351,43 @@ boing_boing_candy_2015_to_2017_clean %>%
 ```{r}
 # For the next three questions, count despair as -1, joy as +1 and meh as 0.
 
-boing_boing_candy_2015_to_2017_clean %>% 
-  mutate(review = case_when(
-              str_detect(review, "JOY") ~ 1,
-              str_detect(country, "DESPAIR") ~ -1,
-              str_detect(country, "MEH") ~ 0
+boing_boing_candy_2015_to_2017_clean_rating <- boing_boing_candy_2015_to_2017_clean %>% 
+  mutate(
+    rating_score = case_when(
+      review == "JOY" ~ 1,
+      review == "DESPAIR" ~ -1 ,
+      review == "MEH" ~ 0
   )
 )
-
 ```
-
 
 ```{r}
 # 6. What was the most popular candy bar by this rating system for each gender in the dataset?
 
-boing_boing_candy_2015_to_2017_clean %>% 
-  group_by(candy_name) %>% 
- # filter(str_detect(review, "JOY")) %>% 
-  summarise(rating_score = length(str_detect(review, "JOY")) - length(str_detect(review, "DESPAIR"))) 
-#  slice_max(joy)
-  
+boing_boing_candy_2015_to_2017_clean_rating %>% 
+  group_by(gender, candy_name) %>% 
+  summarise(rating_score = sum(rating_score, na.rm = TRUE)) %>% 
+  slice_max(rating_score, with_ties = FALSE)
 
 ```
 
 ```{r}
 # 7. What was the most popular candy bar in each year?
 
+boing_boing_candy_2015_to_2017_clean_rating %>% 
+  group_by(year, candy_name) %>%
+  summarise(rating_score = sum(rating_score, na.rm = TRUE)) %>%
+  slice_max(rating_score, with_ties = FALSE)
+
 ```
 
 ```{r}
 # 8. What was the most popular candy bar by this rating for people in US, Canada, UK and all other countries?
+
+boing_boing_candy_2015_to_2017_clean_rating %>% 
+  group_by(country, candy_name) %>%
+  summarise(rating_score = sum(rating_score, na.rm = TRUE)) %>% 
+  slice_max(rating_score, with_ties = FALSE)
 
 ```
 
