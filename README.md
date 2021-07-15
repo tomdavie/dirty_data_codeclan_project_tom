@@ -15,4 +15,4 @@
 
 <p>Beyond the cleaning the analysis itself was relatively straight forward and I&#39;m happy with the result. </p>
 
-<p>Find more of my work on my <a href="Github">https://github.com/tomdavie</a></p>
+<p>Find more of my work on my <a href="https://github.com/tomdavie">Github</a></p>
