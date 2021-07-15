@@ -1,0 +1,146 @@
+---
+title: "Halloween Candy"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(here)
+library(readxl)
+```
+
+```{r}
+here::here
+```
+
+```{r}
+boing_boing_candy_2015_to_2017_clean <- read_csv(here("clean_data/halloween_clean_data.csv"))
+```
+
+```{r}
+# 1. What is the total number of candy ratings given across the three years. (number of candy ratings, not number of raters. Don’t count missing values)
+
+boing_boing_candy_2015_to_2017_clean %>% 
+  summarise(total_no_of_candy_ratings = length(review[!is.na(review)]))
+```
+
+```{r}
+# 2. What was the average age of people who are going out trick or treating 
+
+boing_boing_candy_2015_to_2017_clean %>% 
+    group_by(going_trick_or_treating) %>% 
+    filter(age < 122) %>%  # Oldest ever person was 122 
+    summarise(average_age = round(mean(age, nm.rm = TRUE))) %>% 
+    filter(going_trick_or_treating == "Yes") %>% 
+    pull(average_age)
+
+```
+
+```{r}
+# 3. What was the average age of people not going trick or treating?
+  
+boing_boing_candy_2015_to_2017_clean %>% 
+    group_by(going_trick_or_treating) %>% 
+    filter(age < 122) %>%  # Oldest ever person was 122 
+    summarise(average_age = round(mean(age, nm.rm = TRUE))) %>% 
+    filter(going_trick_or_treating == "No") %>% 
+    pull(average_age)
+
+```
+
+```{r}
+# 4. For each of joy, despair and meh, which candy bar revived the most of these ratings?
+
+#4.1
+# Most Ratings for Joy
+boing_boing_candy_2015_to_2017_clean %>% 
+  group_by(candy_name) %>%
+  filter(!is.na(candy_name)) %>% 
+  filter(str_detect(review, "JOY")) %>% 
+  summarise(how_many_joy_ratings = length(review)) %>% 
+  slice_max(how_many_joy_ratings, n = 1)
+```
+
+
+```{r}
+#4.2
+# Most Ratings for Despair
+boing_boing_candy_2015_to_2017_clean %>% 
+  group_by(candy_name) %>%
+  filter(!is.na(candy_name)) %>% 
+  filter(str_detect(review, "DESPAIR")) %>% 
+  summarise(how_many_despair_ratings = length(review)) %>% 
+  slice_max(how_many_despair_ratings)
+```
+
+```{r}
+#4.3
+# Most Ratings for Meh
+boing_boing_candy_2015_to_2017_clean %>% 
+  group_by(candy_name) %>%
+  filter(!is.na(candy_name)) %>% 
+  filter(str_detect(review, "MEH")) %>% 
+  summarise(how_many_meh_ratings = length(review)) %>% 
+  slice_max(how_many_meh_ratings)
+```
+
+
+```{r}
+# 5. How many people rated Starburst as despair?
+
+boing_boing_candy_2015_to_2017_clean %>% 
+  group_by(review) %>%
+  filter(str_detect(candy_name, "Starburst")) %>% 
+  filter(str_detect(review, "DESPAIR")) %>% 
+  summarise(how_many_rated_starburst = length(candy_name)) %>% 
+  pull()
+  
+```
+
+```{r}
+# For the next three questions, count despair as -1, joy as +1 and meh as 0.
+
+boing_boing_candy_2015_to_2017_clean_rating <- boing_boing_candy_2015_to_2017_clean %>% 
+  mutate(
+    rating_score = case_when(
+      review == "JOY" ~ 1,
+      review == "DESPAIR" ~ -1 ,
+      review == "MEH" ~ 0
+  )
+)
+```
+
+```{r}
+# 6. What was the most popular candy bar by this rating system for each gender in the dataset?
+
+boing_boing_candy_2015_to_2017_clean_rating %>% 
+  group_by(gender, candy_name) %>% 
+  filter(!is.na(gender)) %>% 
+  summarise(rating_score = sum(rating_score, na.rm = TRUE)) %>% 
+  slice_max(rating_score, with_ties = FALSE)
+
+```
+
+```{r}
+# 7. What was the most popular candy bar in each year?
+
+boing_boing_candy_2015_to_2017_clean_rating %>% 
+  group_by(year, candy_name) %>%
+  summarise(rating_score = sum(rating_score, na.rm = TRUE)) %>%
+  slice_max(rating_score, with_ties = FALSE)
+
+```
+
+```{r}
+# 8. What was the most popular candy bar by this rating for people in US, Canada, UK and all other countries?
+
+boing_boing_candy_2015_to_2017_clean_rating %>% 
+  group_by(country, candy_name) %>%
+  filter(!is.na(country)) %>% 
+  summarise(rating_score = sum(rating_score, na.rm = TRUE)) %>% 
+  slice_max(rating_score, with_ties = FALSE)
+
+```
+
+
