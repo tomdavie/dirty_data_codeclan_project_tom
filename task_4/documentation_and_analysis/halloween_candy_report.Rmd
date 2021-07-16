@@ -1,4 +1,3 @@
-
 ---
 title: "Halloween Candy Project Report"
 output: html_document
