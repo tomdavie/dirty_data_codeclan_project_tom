@@ -1,295 +1,244 @@
-# Halloween Candy Project Report
+<h1 id="toc_0">Halloween Candy Project Report</h1>
 
+<h2 id="toc_1">Introduction</h2>
 
-## Introduction
+<p>We were given a messy data set of survey data from people out on halloween. This captured if they were going trick or treating and various other data points including their favourite candy. This was in three seperate sheets for the years 2015, 2016 and 2017. We want to clean this data and answer some interesting questions. </p>
 
-We were given a messy data set of survey data from people out on halloween. This captured if they were going trick or treating and various other data points including their favourite candy. This was in three seperate sheets for the years 2015, 2016 and 2017. We want to clean this data and answer some interesting questions. 
+<h2 id="toc_2">Assumptions</h2>
 
+<ul>
+<li> A controversial assumption made here is that M&amp;M&#39;s can fit into one category as opposed to individual flavours. This gave us a overall consensus on M&amp;M&#39;s, however, some may say this effected the overall favourite candy findings. </li>
+</ul>
 
-## Assumptions
+<h2 id="toc_3">Cleaning the data</h2>
 
-*  A controversial assumption made here is that M&M's can fit into one category as opposed to individual flavours. This gave us a overall consensus on M&M's, however, some may say this effected the overall favourite candy findings. 
+<p>The main initial issue with cleaning the data set was it was seperated into 3 different years. To join these I needed to standardise all the columns and column headings to bind them together. This involved selecting only the necessary columns we needed to analyse and rename or add missing columns. </p>
 
-## Cleaning the data
+<p><strong>Adding missing gender, country and state columns and filling with NAs</strong></p>
 
-The main initial issue with cleaning the data set was it was seperated into 3 different years. To join these I needed to standardise all the columns and column headings to bind them together. This involved selecting only the necessary columns we needed to analyse and rename or add missing columns. 
-
-**Adding missing gender, country and state columns and filling with NAs**
-
-```{r}
-boing_boing_candy_2015 <- boing_boing_candy_2015 %>% 
+<div><pre><code class="language-{r}">boing_boing_candy_2015 &lt;- boing_boing_candy_2015 %&gt;% 
   add_column(gender = NA,
              country = NA,
-             state = NA)
-```
+             state = NA)</code></pre></div>
 
-I also pivoted longer the vast number of columns for candy ratings into just two columns.
+<p>I also pivoted longer the vast number of columns for candy ratings into just two columns.</p>
 
-**Pivoting 2015, 2016 and 2017 table**
+<p><strong>Pivoting 2015, 2016 and 2017 table</strong></p>
 
-```{r}
-boing_boing_candy_2015 <- boing_boing_candy_2015 %>% 
-  pivot_longer(4:96, names_to = "candy_name", values_to = "review")
+<div><pre><code class="language-{r}">boing_boing_candy_2015 &lt;- boing_boing_candy_2015 %&gt;% 
+  pivot_longer(4:96, names_to = &quot;candy_name&quot;, values_to = &quot;review&quot;)
 
-boing_boing_candy_2016 <- boing_boing_candy_2016 %>% 
-  pivot_longer(6:105, names_to = "candy_name", values_to = "review")
+boing_boing_candy_2016 &lt;- boing_boing_candy_2016 %&gt;% 
+  pivot_longer(6:105, names_to = &quot;candy_name&quot;, values_to = &quot;review&quot;)
 
-boing_boing_candy_2017 <- boing_boing_candy_2017 %>% 
-  pivot_longer(6:108, names_to = "candy_name", values_to = "review")
-```
+boing_boing_candy_2017 &lt;- boing_boing_candy_2017 %&gt;% 
+  pivot_longer(6:108, names_to = &quot;candy_name&quot;, values_to = &quot;review&quot;)</code></pre></div>
 
-The most time consuming elements were cleaning the 'country' and 'candy_name' columns. 
+<p>The most time consuming elements were cleaning the &#39;country&#39; and &#39;candy_name&#39; columns. </p>
 
-**Taking out non-candies**
+<p><strong>Taking out non-candies</strong></p>
 
-```{r}
-boing_boing_candy_2015_to_2017_clean <- 
-  boing_boing_candy_2015_to_2017_clean %>%
+<div><pre><code class="language-{r}">boing_boing_candy_2015_to_2017_clean &lt;- 
+  boing_boing_candy_2015_to_2017_clean %&gt;%
   mutate(
     candy_name = case_when(
-      str_detect(candy_name, "M&M") ~ "M&M's",
-      str_detect(candy_name, "Anon") ~ "Mary Janes",
-      str_detect(candy_name, "[Gg]ummy Bears") ~ "Gummy Bears",
-      str_detect(candy_name, "Jolly Rancher") ~ "Jolly Rancher",
-      str_detect(candy_name, "[Ll]icorice") ~ "Licorice",
-      str_detect(candy_name, "baseball") ~ "Gum",
-      str_detect(candy_name, "Tolberone") ~ "Tolberone",
-      str_detect(candy_name, "Chick-o-Sticks") ~ "Chick-o-Sticks",
-      str_detect(candy_name, "[Cc]ircus") ~ "Circus Peanuts",
-      str_detect(candy_name, "[Pp]eanut [Bb]utter [B|J]") ~ "Peanut Butter Bars",
-      str_detect(candy_name, "Sourpatch") ~ "Sourpatch Kids",
-      str_detect(candy_name, "Sweetums") ~ "Sweetums",
-      str_detect(candy_name, "Dark Chocolate") ~ "Hershey's Dark Chocolate",
-      str_detect(candy_name, "vein") ~ "NA",
-      str_detect(candy_name, "restaurant") ~ "NA",
-      str_detect(candy_name, "vein") ~ "NA",
-      str_detect(candy_name, "[Cc]ash") ~ "NA",
-      str_detect(candy_name, "vein") ~ "NA",
-      str_detect(candy_name, "[Dd]ental") ~ "NA",
-      str_detect(candy_name, "Acetam") ~ "NA",
-      str_detect(candy_name, "[Gg]low *stick") ~ "NA",
-      str_detect(candy_name, "[Gg]low *stick") ~ "NA",
-      str_detect(candy_name, "[Cc]omics") ~ "NA",
-      str_detect(candy_name, "[Ff]ruit") ~ "NA",
-      str_detect(candy_name, "[Hh]ugs") ~ "NA",
-      str_detect(candy_name, "[Kk]ale") ~ "NA",
-      str_detect(candy_name, "[Ll]apel|[Pp]in") ~ "NA",
-      str_detect(candy_name, "[Ll]apel|[Pp]in") ~ "NA",
-      str_detect(candy_name, "[Ll]apel|[Pp]in") ~ "NA",
-      str_detect(candy_name, "[Cc]hips") ~ "NA",
-      str_detect(candy_name, "[Ll]apel|[Pp]in") ~ "NA",
-      str_detect(candy_name, "Iodine") ~ "NA",
-      str_detect(candy_name, "[Ss]potted [Dd]ick") ~ "NA",
-      str_detect(candy_name, "[Tt]rail Mix") ~ "NA",
-      str_detect(candy_name, "[Vv]icodin") ~ "NA",
-      str_detect(candy_name, "[Vv]icodin") ~ "NA",
-      str_detect(candy_name, "[Bb]read") ~ "NA",
-      str_detect(candy_name, "[Ww]heat") ~ "NA",
-      str_detect(candy_name, "[Bb]read") ~ "NA",
-      str_detect(candy_name, "game") ~ "NA",
-      str_detect(candy_name, "[Bb]onkers") ~ "Bonkers",
-      str_detect(candy_name, "[Rr]aisins") ~ "Raisins",
-      str_detect(candy_name, "[Cc]hardonnay") ~ "NA",
-      str_detect(candy_name, "[Ss]eason") ~ "NA",
-      str_detect(candy_name, "Whatchamacallit Bars") ~ "NA",
-      str_detect(candy_name, "[Ss]andwich") ~ "NA",
+      str_detect(candy_name, &quot;M&amp;M&quot;) ~ &quot;M&amp;M&#39;s&quot;,
+      str_detect(candy_name, &quot;Anon&quot;) ~ &quot;Mary Janes&quot;,
+      str_detect(candy_name, &quot;[Gg]ummy Bears&quot;) ~ &quot;Gummy Bears&quot;,
+      str_detect(candy_name, &quot;Jolly Rancher&quot;) ~ &quot;Jolly Rancher&quot;,
+      str_detect(candy_name, &quot;[Ll]icorice&quot;) ~ &quot;Licorice&quot;,
+      str_detect(candy_name, &quot;baseball&quot;) ~ &quot;Gum&quot;,
+      str_detect(candy_name, &quot;Tolberone&quot;) ~ &quot;Tolberone&quot;,
+      str_detect(candy_name, &quot;Chick-o-Sticks&quot;) ~ &quot;Chick-o-Sticks&quot;,
+      str_detect(candy_name, &quot;[Cc]ircus&quot;) ~ &quot;Circus Peanuts&quot;,
+      str_detect(candy_name, &quot;[Pp]eanut [Bb]utter [B|J]&quot;) ~ &quot;Peanut Butter Bars&quot;,
+      str_detect(candy_name, &quot;Sourpatch&quot;) ~ &quot;Sourpatch Kids&quot;,
+      str_detect(candy_name, &quot;Sweetums&quot;) ~ &quot;Sweetums&quot;,
+      str_detect(candy_name, &quot;Dark Chocolate&quot;) ~ &quot;Hershey&#39;s Dark Chocolate&quot;,
+      str_detect(candy_name, &quot;vein&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;restaurant&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;vein&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Cc]ash&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;vein&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Dd]ental&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;Acetam&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Gg]low *stick&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Gg]low *stick&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Cc]omics&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Ff]ruit&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Hh]ugs&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Kk]ale&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Ll]apel|[Pp]in&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Ll]apel|[Pp]in&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Ll]apel|[Pp]in&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Cc]hips&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Ll]apel|[Pp]in&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;Iodine&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Ss]potted [Dd]ick&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Tt]rail Mix&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Vv]icodin&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Vv]icodin&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Bb]read&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Ww]heat&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Bb]read&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;game&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Bb]onkers&quot;) ~ &quot;Bonkers&quot;,
+      str_detect(candy_name, &quot;[Rr]aisins&quot;) ~ &quot;Raisins&quot;,
+      str_detect(candy_name, &quot;[Cc]hardonnay&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Ss]eason&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;Whatchamacallit Bars&quot;) ~ &quot;NA&quot;,
+      str_detect(candy_name, &quot;[Ss]andwich&quot;) ~ &quot;NA&quot;,
       TRUE ~ candy_name
     )
-  ) %>% mutate(candy_name = na_if(candy_name, "NA"))
-```
+  ) %&gt;% mutate(candy_name = na_if(candy_name, &quot;NA&quot;))</code></pre></div>
 
-## Analysis Questions
+<h2 id="toc_4">Analysis Questions</h2>
 
+<p><strong>1. What is the total number of candy ratings given across the three years. (number of candy ratings, not number of raters. Don’t count missing values)</strong></p>
 
-**1. What is the total number of candy ratings given across the three years. (number of candy ratings, not number of raters. Don’t count missing values)**
+<div><pre><code class="language-{r}">boing_boing_candy_2015_to_2017_clean %&gt;% 
+  summarise(total_no_of_candy_ratings = length(review[!is.na(review)]))</code></pre></div>
 
-```{r}
-boing_boing_candy_2015_to_2017_clean %>% 
-  summarise(total_no_of_candy_ratings = length(review[!is.na(review)]))
-```
+<div><pre><code class="language-{r}">762055  </code></pre></div>
 
-```{r}
-762055	
-```
+<p><strong>2. What was the average age of people who are going out trick or treating</strong></p>
 
-**2. What was the average age of people who are going out trick or treating**
+<div><pre><code class="language-{r}">boing_boing_candy_2015_to_2017_clean %&gt;% 
+    group_by(going_trick_or_treating) %&gt;% 
+    filter(age &lt; 122) %&gt;%  # Oldest ever person was 122 
+    summarise(average_age = round(mean(age, nm.rm = TRUE))) %&gt;% 
+    filter(going_trick_or_treating == &quot;Yes&quot;) %&gt;% 
+    pull(average_age)</code></pre></div>
 
-```{r}
-boing_boing_candy_2015_to_2017_clean %>% 
-    group_by(going_trick_or_treating) %>% 
-    filter(age < 122) %>%  # Oldest ever person was 122 
-    summarise(average_age = round(mean(age, nm.rm = TRUE))) %>% 
-    filter(going_trick_or_treating == "Yes") %>% 
-    pull(average_age)
-```
+<div><pre><code class="language-{r}">[1] 35</code></pre></div>
 
-```{r}
-[1] 35
-```
+<p><strong>3. What was the average age of people not going trick or treating</strong></p>
 
-**3. What was the average age of people not going trick or treating**
+<div><pre><code class="language-{r}">boing_boing_candy_2015_to_2017_clean %&gt;% 
+    group_by(going_trick_or_treating) %&gt;% 
+    filter(age &lt; 122) %&gt;%  # Oldest ever person was 122 
+    summarise(average_age = round(mean(age, nm.rm = TRUE))) %&gt;% 
+    filter(going_trick_or_treating == &quot;No&quot;) %&gt;% 
+    pull(average_age)</code></pre></div>
 
-```{r}
-boing_boing_candy_2015_to_2017_clean %>% 
-    group_by(going_trick_or_treating) %>% 
-    filter(age < 122) %>%  # Oldest ever person was 122 
-    summarise(average_age = round(mean(age, nm.rm = TRUE))) %>% 
-    filter(going_trick_or_treating == "No") %>% 
-    pull(average_age)
-```
+<div><pre><code class="language-{r}">[1] 39</code></pre></div>
 
-```{r}
-[1] 39
-```
+<p><strong>4. For each of joy, despair and meh, which candy bar revived the most of these ratings?</strong></p>
 
-**4. For each of joy, despair and meh, which candy bar revived the most of these ratings?**
+<p><strong>4.1
+Most Ratings for Joy</strong></p>
 
-**4.1
-Most Ratings for Joy**
+<div><pre><code class="language-{r}">boing_boing_candy_2015_to_2017_clean %&gt;% 
+  group_by(candy_name) %&gt;%
+  filter(!is.na(candy_name)) %&gt;% 
+  filter(str_detect(review, &quot;JOY&quot;)) %&gt;% 
+  summarise(how_many_joy_ratings = length(review)) %&gt;% 
+  slice_max(how_many_joy_ratings, n = 1)</code></pre></div>
 
-```{r}
-boing_boing_candy_2015_to_2017_clean %>% 
-  group_by(candy_name) %>%
-  filter(!is.na(candy_name)) %>% 
-  filter(str_detect(review, "JOY")) %>% 
-  summarise(how_many_joy_ratings = length(review)) %>% 
-  slice_max(how_many_joy_ratings, n = 1)
-```
-
-```{r}
-candy_name 		|	how_many_joy_ratings
-<chr>			|	<int>
+<div><pre><code class="language-{r}">candy_name      |   how_many_joy_ratings
+&lt;chr&gt;           |   &lt;int&gt;
 -----------------------------------------
-M&M's			|	20477
-```
+M&amp;M&#39;s           |   20477</code></pre></div>
 
-**4.2
-Most Ratings for Despair**
+<p><strong>4.2
+Most Ratings for Despair</strong></p>
 
-```{r}
-boing_boing_candy_2015_to_2017_clean %>% 
-  group_by(candy_name) %>%
-  filter(!is.na(candy_name)) %>% 
-  filter(str_detect(review, "DESPAIR")) %>% 
-  summarise(how_many_despair_ratings = length(review)) %>% 
-  slice_max(how_many_despair_ratings)
-```
+<div><pre><code class="language-{r}">boing_boing_candy_2015_to_2017_clean %&gt;% 
+  group_by(candy_name) %&gt;%
+  filter(!is.na(candy_name)) %&gt;% 
+  filter(str_detect(review, &quot;DESPAIR&quot;)) %&gt;% 
+  summarise(how_many_despair_ratings = length(review)) %&gt;% 
+  slice_max(how_many_despair_ratings)</code></pre></div>
 
-```{r}
-candy_name 		|	how_many_despair_ratings
-<chr>			|	<int>
+<div><pre><code class="language-{r}">candy_name      |   how_many_despair_ratings
+&lt;chr&gt;           |   &lt;int&gt;
 --------------------------------------------
-Mary Janes		|	10677
-```
+Mary Janes      |   10677</code></pre></div>
 
-**4.3
-Most Ratings for Meh**
+<p><strong>4.3
+Most Ratings for Meh</strong></p>
 
-```{r}
-boing_boing_candy_2015_to_2017_clean %>% 
-  group_by(candy_name) %>%
-  filter(!is.na(candy_name)) %>% 
-  filter(str_detect(review, "MEH")) %>% 
-  summarise(how_many_meh_ratings = length(review)) %>% 
-  slice_max(how_many_meh_ratings)
-```
+<div><pre><code class="language-{r}">boing_boing_candy_2015_to_2017_clean %&gt;% 
+  group_by(candy_name) %&gt;%
+  filter(!is.na(candy_name)) %&gt;% 
+  filter(str_detect(review, &quot;MEH&quot;)) %&gt;% 
+  summarise(how_many_meh_ratings = length(review)) %&gt;% 
+  slice_max(how_many_meh_ratings)</code></pre></div>
 
-```{r}
-candy_name 		|	how_many_meh_ratings
-<chr>			|	<int>
+<div><pre><code class="language-{r}">candy_name      |   how_many_meh_ratings
+&lt;chr&gt;           |   &lt;int&gt;
 ----------------------------------------
-M&M's			|	6016
-```
+M&amp;M&#39;s           |   6016</code></pre></div>
 
-**5. How many people rated Starburst as despair?
-**
+<p>**5. How many people rated Starburst as despair?
+**</p>
 
-```{r}
-boing_boing_candy_2015_to_2017_clean %>% 
-  group_by(review) %>%
-  filter(str_detect(candy_name, "Starburst")) %>% 
-  filter(str_detect(review, "DESPAIR")) %>% 
-  summarise(how_many_rated_starburst = length(candy_name)) %>% 
-  pull()
-```
+<div><pre><code class="language-{r}">boing_boing_candy_2015_to_2017_clean %&gt;% 
+  group_by(review) %&gt;%
+  filter(str_detect(candy_name, &quot;Starburst&quot;)) %&gt;% 
+  filter(str_detect(review, &quot;DESPAIR&quot;)) %&gt;% 
+  summarise(how_many_rated_starburst = length(candy_name)) %&gt;% 
+  pull()</code></pre></div>
 
-```{r}
-[1] 1990
-```
+<div><pre><code class="language-{r}">[1] 1990</code></pre></div>
 
-**For the next three questions, count despair as -1, joy as +1 and meh as 0.**
+<p><strong>For the next three questions, count despair as -1, joy as +1 and meh as 0.</strong></p>
 
-```{r}
-boing_boing_candy_2015_to_2017_clean_rating <- 
-boing_boing_candy_2015_to_2017_clean %>% 
+<div><pre><code class="language-{r}">boing_boing_candy_2015_to_2017_clean_rating &lt;- 
+boing_boing_candy_2015_to_2017_clean %&gt;% 
   mutate(
     rating_score = case_when(
-      review == "JOY" ~ 1,
-      review == "DESPAIR" ~ -1 ,
-      review == "MEH" ~ 0
+      review == &quot;JOY&quot; ~ 1,
+      review == &quot;DESPAIR&quot; ~ -1 ,
+      review == &quot;MEH&quot; ~ 0
   )
-)
-```
+)</code></pre></div>
 
-**6. What was the most popular candy bar by this rating system for each gender in the dataset?**
+<p><strong>6. What was the most popular candy bar by this rating system for each gender in the dataset?</strong></p>
 
-```{r}
-boing_boing_candy_2015_to_2017_clean_rating %>% 
-  group_by(gender, candy_name) %>% 
-  filter(!is.na(gender)) %>% 
-  summarise(rating_score = sum(rating_score, na.rm = TRUE)) %>% 
-  slice_max(rating_score, with_ties = FALSE)
-```
+<div><pre><code class="language-{r}">boing_boing_candy_2015_to_2017_clean_rating %&gt;% 
+  group_by(gender, candy_name) %&gt;% 
+  filter(!is.na(gender)) %&gt;% 
+  summarise(rating_score = sum(rating_score, na.rm = TRUE)) %&gt;% 
+  slice_max(rating_score, with_ties = FALSE)</code></pre></div>
 
-```{r}
-gender 				|	candy_name	|	rating_score
-<chr>				|	<chr>		|	<dbl>
+<div><pre><code class="language-{r}">gender              |   candy_name  |   rating_score
+&lt;chr&gt;               |   &lt;chr&gt;       |   &lt;dbl&gt;
 -------------------------------------------------------
-Female				|	M&M's		|	2430
-I'd rather no say   |   M&M's	    |	207
-Male 				|   M&M's	    | 	4196
-Other				|   M&M's	    |   100
-```
+Female              |   M&amp;M&#39;s       |   2430
+I&#39;d rather no say   |   M&amp;M&#39;s       |   207
+Male                |   M&amp;M&#39;s       |   4196
+Other               |   M&amp;M&#39;s       |   100</code></pre></div>
 
-**7. What was the most popular candy bar in each year?**
+<p><strong>7. What was the most popular candy bar in each year?</strong></p>
 
-```{r}
-boing_boing_candy_2015_to_2017_clean_rating %>% 
-  group_by(year, candy_name) %>%
-  summarise(rating_score = sum(rating_score, na.rm = TRUE)) %>%
-  slice_max(rating_score, with_ties = FALSE)
-```
+<div><pre><code class="language-{r}">boing_boing_candy_2015_to_2017_clean_rating %&gt;% 
+  group_by(year, candy_name) %&gt;%
+  summarise(rating_score = sum(rating_score, na.rm = TRUE)) %&gt;%
+  slice_max(rating_score, with_ties = FALSE)</code></pre></div>
 
-```{r}
-year 				|	candy_name	|	rating_score
-<dbl>				|	<chr>		|	<dbl>
+<div><pre><code class="language-{r}">year                |   candy_name  |   rating_score
+&lt;dbl&gt;               |   &lt;chr&gt;       |   &lt;dbl&gt;
 -------------------------------------------------------
-2015				|	M&M's		|	6495
-2016  				|   M&M's	    |	2137
-2017				|   M&M's	    | 	4845
-```
+2015                |   M&amp;M&#39;s       |   6495
+2016                |   M&amp;M&#39;s       |   2137
+2017                |   M&amp;M&#39;s       |   4845</code></pre></div>
 
-**8. What was the most popular candy bar by this rating for people in US, Canada, UK and all other countries?**
+<p><strong>8. What was the most popular candy bar by this rating for people in US, Canada, UK and all other countries?</strong></p>
 
-```{r}
-boing_boing_candy_2015_to_2017_clean_rating %>% 
-  group_by(country, candy_name) %>%
-  filter(!is.na(country)) %>% 
-  summarise(rating_score = sum(rating_score, na.rm = TRUE)) %>% 
-  slice_max(rating_score, with_ties = FALSE)
-```
+<div><pre><code class="language-{r}">boing_boing_candy_2015_to_2017_clean_rating %&gt;% 
+  group_by(country, candy_name) %&gt;%
+  filter(!is.na(country)) %&gt;% 
+  summarise(rating_score = sum(rating_score, na.rm = TRUE)) %&gt;% 
+  slice_max(rating_score, with_ties = FALSE)</code></pre></div>
 
-```{r}
-country 			 	 |	candy_name	  |	rating_score
-<chr>				 	 |	<chr>		  |	<dbl>
+<div><pre><code class="language-{r}">country                  |  candy_name    | rating_score
+&lt;chr&gt;                    |  &lt;chr&gt;         | &lt;dbl&gt;
 -------------------------------------------------------
-Canada					 |	100 Grand Bar |	0
-United Kingdom  		 |  M&M's	      |	104
-United States of America |  M&M's	      | 5943	
-```
+Canada                   |  100 Grand Bar | 0
+United Kingdom           |  M&amp;M&#39;s         | 104
+United States of America |  M&amp;M&#39;s         | 5943    </code></pre></div>
 
+<h2 id="toc_5">Conclusion</h2>
 
-## Conclusion
-
-In conclusion, this data set was particularly difficult to clean up but beyond that we managed to garner some interesting information. Key takeaways: M&M's are incredibly popular and Mary Janes are worth avoiding at all costs.
-
+<p>In conclusion, this data set was particularly difficult to clean up but beyond that we managed to garner some interesting information. Key takeaways: M&amp;M&#39;s are incredibly popular and Mary Janes are worth avoiding at all costs.</p>
