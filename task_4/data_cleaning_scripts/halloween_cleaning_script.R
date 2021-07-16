@@ -17,8 +17,6 @@ boing_boing_candy_2016 <- boing_boing_candy_2016 %>%
 boing_boing_candy_2017 <- boing_boing_candy_2017 %>% 
   select(2:109)
 
-# Go back and look at 'other joy / despair' text box and how could incorporate
-
 # renaming columns 
 boing_boing_candy_2015 <- boing_boing_candy_2015 %>% 
   rename(

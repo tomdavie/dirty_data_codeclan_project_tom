@@ -37,7 +37,7 @@ bird_ship_data_joined <- bird_ship_data_joined %>%
 bird_ship_data_joined <- bird_ship_data_joined %>% 
   mutate(species_abbreviation = str_extract(species_abbreviation, "[A-Z]+"))
 
-bird_ship_data_jointed bird_ship_data_joined %>% 
+bird_ship_data_joined <-  bird_ship_data_joined %>% 
   mutate(species_common_name_taxon_age_sex_plumage_phase = 
            str_remove(species_common_name_taxon_age_sex_plumage_phase, "[A-Z]+$"))
 
