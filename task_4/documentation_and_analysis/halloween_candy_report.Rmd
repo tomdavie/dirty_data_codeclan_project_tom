@@ -1,3 +1,9 @@
+
+---
+title: "Halloween Candy Project Report"
+output: html_document
+---
+
 <h1 id="toc_0">Halloween Candy Project Report</h1>
 
 <h2 id="toc_1">Introduction</h2>
